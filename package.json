@@ -20,5 +20,11 @@
   "bugs": {
     "url": "https://github.com/stvnpalma/job-tracker-api/issues"
   },
-  "homepage": "https://github.com/stvnpalma/job-tracker-api#readme"
+  "homepage": "https://github.com/stvnpalma/job-tracker-api#readme",
+  "dependencies": {
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6"
+  }
 }
