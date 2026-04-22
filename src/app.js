@@ -26,6 +26,23 @@ app.get("/applications", (req, res) => {
   res.json(applications);
 });
 
+// GET /applications/:id -> find. one application by ID
+//:id is the URLparameter - Express captures whatever is is that position
+app.get("/applications/:id", (req, res) => {
+  //req.params.id comes in as a STRING from the URL - "2" not 2
+  //number() converts it to an actual number so === works correctly
+  const id = Number(req.params.id);
+  // find() loops through the array and returns the first match
+  // This is logic — for each application, check if its id matches
+  const application = applications.find((app) => app.id === id);
+
+  // if no match was found, .find() returns undefined
+  if (!application) {
+    return res.status(404).json({ error: "Application not found" });
+  }
+  res.json(application);
+});
+
 app.listen(PORT, () => {
   console.log(`Job Tracker API running on http://localhost: $ {PORT}`);
 });
