@@ -15,9 +15,9 @@ const applications = [
   },
   {
     id: 2,
-    company: "Sripe",
+    company: "Stripe",
     role: "node.js Developer",
-    appliedDate: "2024-01-2020",
+    appliedDate: "2024-01-20",
     notes: "phone screened scheduled for Friday",
   },
 ];
@@ -43,6 +43,38 @@ app.get("/applications/:id", (req, res) => {
   res.json(application);
 });
 
+// PUT /applications/:id → update an existing application
+app.put("/applications/:id", (req, res) => {
+  // 1. GET THE ID FROM THE PARAMS (URL)
+  const id = Number(req.params.id);
+
+  // 2. FIND THE INDEX
+  const index = applications.findIndex((app) => app.id === id);
+
+  // 3. IF NOT FOUND, RETURN 404 (and 'return' so the rest of the code stops!)
+  if (index === -1) {
+    return res.status(404).json({ error: "Application not found" });
+  }
+
+  // 4. VALIDATE STATUS
+  const validateStatuses = ["applied", "interview", "offer", "rejected"];
+  if (req.body.status && !validateStatuses.includes(req.body.status)) {
+    return res.status(400).json({ error: "Invalid status" });
+  }
+
+  // 5. MERGE AND SAVE
+  const updateApplication = {
+    ...applications[index], // Keep everything old
+    ...req.body, // Overwrite with new stuff from curl
+    id, // Ensure the ID stays as the number from the URL
+  };
+
+  applications[index] = updateApplication;
+
+  // 6. SEND THE RESPONSE (Crucial! If you don't do this, curl hangs)
+  res.json(updateApplication);
+});
+
 app.listen(PORT, () => {
-  console.log(`Job Tracker API running on http://localhost: $ {PORT}`);
+  console.log(`Job Tracker API running on http://localhost: ${PORT}`);
 });

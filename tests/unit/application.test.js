@@ -34,4 +34,51 @@ describe("finding an application by id", () => {
 
     expect(result).toBeUndefined();
   });
+
+  // ── PUT /applications/:id logic tests ─────────────────────
+  describe("updating an application", () => {
+    it("finds the correctly index by id", () => {
+      const application = [
+        {
+          id: 1,
+          company: "Google",
+        },
+        {
+          id: 2,
+          company: "Stripe",
+        },
+      ];
+    });
+    const index = applications.findIndex((app) => app.id === 2);
+  });
+  it("returns -1 when id does not exist", () => {
+    const application = {
+      id: 1,
+      company: "Google",
+    };
+    const index = applications.findIndex((app) => app.id === 99);
+    expect(index).toBe(-1);
+  });
+  it("accepts a valid status", () => {
+    const validateStatuses = ["applied", "interview", "offer", "rejected"];
+    const incoming = "interview";
+
+    expect(validateStatuses.includes(incoming)).toBe(true);
+  });
+  it("merge update without overwriting unrelated fields", () => {
+    const existing = {
+      id: 1,
+      company: "Google",
+      role: "Backend Engineer",
+      status: "applied",
+      notes: "null",
+    };
+    const update = { status: "interview", notes: "Phone screen done" };
+    const result = { ...existing, ...update, id: existing.id };
+
+    expect(result.status).toBe("interview");
+    expect(result.notes).toBe("Phone screen done");
+    expect(result.company).toBe("Google");
+    expect(result.id).toBe(1);
+  });
 });
