@@ -35,3 +35,62 @@ describe("finding an application by id", () => {
     expect(result).toBeUndefined();
   });
 });
+
+// ── POST /applications logic tests ────────────────────────
+
+describe("validating a new application", () => {
+  test("detects missing required fields", () => {
+    const body = { company: "Netflix" };
+    const requiredFields = ["company", "role", "status", "appliedDate"];
+    const missingFields = [];
+
+    for (const field of requiredFields) {
+      if (!(field in body)) {
+        missingFields.push(field);
+      }
+    }
+
+    expect(missingFields).toContain("role");
+    expect(missingFields).toContain("status");
+    expect(missingFields).toContain("appliedDate");
+    expect(missingFields).not.toContain("company");
+  });
+
+  it("detects a duplicate application", () => {
+    const existing = [
+      {
+        id: 1,
+        company: "Apple",
+        role: "Backend Engineer",
+      },
+    ];
+    const incoming = { company: "Apple", role: "Backend Engineer" };
+    let alreadyApplied = false;
+
+    for (const app of existing) {
+      if (app.company === incoming.company && app.role === incoming.role) {
+        alreadyApplied = true;
+      }
+    }
+    expect(alreadyApplied).toBe(true);
+  });
+
+  it("allows applications for the same company for different roles", () => {
+    const existing = [
+      {
+        id: 1,
+        company: "Apple",
+        role: "Backend Engineer",
+      },
+    ];
+    const incoming = { company: "Apple", role: "Frontend Engineer" };
+    let alreadyApplied = false;
+
+    for (const app of existing) {
+      if (app.company === incoming.company && app.role === incoming.role) {
+        alreadyApplied = true;
+      }
+    }
+    expect(alreadyApplied).toBe(false);
+  });
+});

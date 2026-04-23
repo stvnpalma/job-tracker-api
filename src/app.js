@@ -1,3 +1,4 @@
+const { application } = require("express");
 const express = require("express");
 const app = express();
 
@@ -41,6 +42,59 @@ app.get("/applications/:id", (req, res) => {
     return res.status(404).json({ error: "Application not found" });
   }
   res.json(application);
+});
+
+app.post("/applications", (req, res) => {
+  // req.body is the data sent by the client
+  // we destructure exactly what we expect - OBJECTS
+  const { company, role, status, appliedDate, notes } = req.body;
+  // ── Validation — never trust data coming in ────────────
+  // loops concept: we check required fields using an array
+  const requiredFields = ["company", "role", "status", "appliedDate"];
+  const missingFields = [];
+
+  for (const field of requiredFields) {
+    if (!req.body[field]) {
+      missingFields.push(field);
+    }
+  }
+  if (missingFields.length > 0) {
+    return res.status(400).json({
+      error: "Missing required fields",
+      missing: missingFields,
+    });
+  }
+  // ── Business logic — no duplicate applications ─────────
+  // loops concept: iterate over existing applications to find a match
+
+  let alreadyApplied = false;
+
+  for (const app of applications) {
+    if (app.company === company && app.role === role) {
+      alreadyApplied = true;
+    }
+  }
+  if (alreadyApplied) {
+    return res.status(400).json({
+      error: "You have already appled to this role at this company",
+    });
+  }
+  // ── Build the new application object ───────────────────
+  // id is generated from the current array length + 1
+
+  const newApplication = {
+    id: applications.length + 1,
+    company,
+    role,
+    status,
+    appliedDate,
+    notes: notes || null, // if notes wasn't sent, default to null
+  };
+  // push it into our in-memory array
+  applications.push(newApplication);
+
+  // 201 = Created — the correct status code for a new resource
+  res.status(201).json(application);
 });
 
 app.listen(PORT, () => {
