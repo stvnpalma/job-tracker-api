@@ -75,6 +75,32 @@ app.put("/applications/:id", (req, res) => {
   res.json(updateApplication);
 });
 
+// DELETE /applications/:id → remove an application
+app.delete("/applications/:id", (req, res) => {
+  const id = Number(req.params.id);
+
+  // find the position of this application in the array
+  const index = applications.findIndex((app) => app.id === id);
+
+  // -1 means not found
+  if (index === -1) {
+    return res.status(404).json({ error: "Application not found" });
+  }
+
+  // pull out the application before deleting it
+  // destructuring: grab the item at this index into its own variable
+  const { company, role } = applications[index];
+
+  // splice removes 1 item at the found index
+  applications.splice(index, 1);
+
+  // return a clean confirmation object — shorthand property names
+  res.json({
+    message: `Application to ${company} for ${role} deleted successfully`,
+    deletedId: id,
+  });
+});
+
 app.listen(PORT, () => {
   console.log(`Job Tracker API running on http://localhost: ${PORT}`);
 });
