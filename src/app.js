@@ -1,4 +1,3 @@
-const { application } = require("express");
 const express = require("express");
 const app = express();
 
@@ -11,45 +10,41 @@ const applications = [
     id: 1,
     company: "Google",
     role: "Backend Engineer",
+    status: "applied",
     appliedDate: "2024-01-15",
     notes: null,
   },
   {
     id: 2,
-    company: "Sripe",
-    role: "node.js Developer",
-    appliedDate: "2024-01-2020",
-    notes: "phone screened scheduled for Friday",
+    company: "Stripe",
+    role: "Node.js Developer",
+    status: "interview",
+    appliedDate: "2024-01-20",
+    notes: "Phone screen scheduled for Friday",
   },
 ];
 
+// GET /applications → return all applications
 app.get("/applications", (req, res) => {
   res.json(applications);
 });
 
-// GET /applications/:id -> find. one application by ID
-//:id is the URLparameter - Express captures whatever is is that position
+// GET /applications/:id → find one application by ID
 app.get("/applications/:id", (req, res) => {
-  //req.params.id comes in as a STRING from the URL - "2" not 2
-  //number() converts it to an actual number so === works correctly
   const id = Number(req.params.id);
-  // find() loops through the array and returns the first match
-  // This is logic — for each application, check if its id matches
   const application = applications.find((app) => app.id === id);
 
-  // if no match was found, .find() returns undefined
   if (!application) {
     return res.status(404).json({ error: "Application not found" });
   }
+
   res.json(application);
 });
 
+// POST /applications → add a new application
 app.post("/applications", (req, res) => {
-  // req.body is the data sent by the client
-  // we destructure exactly what we expect - OBJECTS
   const { company, role, status, appliedDate, notes } = req.body;
-  // ── Validation — never trust data coming in ────────────
-  // loops concept: we check required fields using an array
+
   const requiredFields = ["company", "role", "status", "appliedDate"];
   const missingFields = [];
 
@@ -58,14 +53,13 @@ app.post("/applications", (req, res) => {
       missingFields.push(field);
     }
   }
+
   if (missingFields.length > 0) {
     return res.status(400).json({
       error: "Missing required fields",
       missing: missingFields,
     });
   }
-  // ── Business logic — no duplicate applications ─────────
-  // loops concept: iterate over existing applications to find a match
 
   let alreadyApplied = false;
 
@@ -74,13 +68,12 @@ app.post("/applications", (req, res) => {
       alreadyApplied = true;
     }
   }
+
   if (alreadyApplied) {
     return res.status(400).json({
-      error: "You have already appled to this role at this company",
+      error: "You have already applied to this role at this company",
     });
   }
-  // ── Build the new application object ───────────────────
-  // id is generated from the current array length + 1
 
   const newApplication = {
     id: applications.length + 1,
@@ -88,15 +81,59 @@ app.post("/applications", (req, res) => {
     role,
     status,
     appliedDate,
-    notes: notes || null, // if notes wasn't sent, default to null
+    notes: notes || null,
   };
-  // push it into our in-memory array
-  applications.push(newApplication);
 
-  // 201 = Created — the correct status code for a new resource
-  res.status(201).json(application);
+  applications.push(newApplication);
+  res.status(201).json(newApplication);
+});
+
+// PUT /applications/:id → update an existing application
+app.put("/applications/:id", (req, res) => {
+  const id = Number(req.params.id);
+  const index = applications.findIndex((app) => app.id === id);
+
+  if (index === -1) {
+    return res.status(404).json({ error: "Application not found" });
+  }
+
+  const validStatuses = ["applied", "interview", "offer", "rejected"];
+
+  if (req.body.status && !validStatuses.includes(req.body.status)) {
+    return res.status(400).json({
+      error: "Invalid status",
+      validStatuses,
+    });
+  }
+
+  const updatedApplication = {
+    ...applications[index],
+    ...req.body,
+    id,
+  };
+
+  applications[index] = updatedApplication;
+  res.json(updatedApplication);
+});
+
+// DELETE /applications/:id → remove an application
+app.delete("/applications/:id", (req, res) => {
+  const id = Number(req.params.id);
+  const index = applications.findIndex((app) => app.id === id);
+
+  if (index === -1) {
+    return res.status(404).json({ error: "Application not found" });
+  }
+
+  const { company, role } = applications[index];
+  applications.splice(index, 1);
+
+  res.json({
+    message: `Application to ${company} for ${role} deleted successfully`,
+    deletedId: id,
+  });
 });
 
 app.listen(PORT, () => {
-  console.log(`Job Tracker API running on http://localhost: $ {PORT}`);
+  console.log(`Job Tracker API running on http://localhost:${PORT}`);
 });
