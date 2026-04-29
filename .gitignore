@@ -76,11 +76,15 @@ web_modules/
 
 # Next.js build output
 .next
-out
+
 
 # Nuxt.js build / generate output
 .nuxt
-dist
+
+# Build outputs
+dist/
+build/
+out/
 
 # Gatsby files
 .cache/
