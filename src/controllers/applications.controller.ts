@@ -2,31 +2,35 @@
 // extract logic into named, reusable functions.
 //@ts-nocheck
 
-import { Application, Request, Response } from "express";
-import { applications, validStatuses } from "../models/application.model";
+import { Request, Response } from "express";
+import {
+  Application,
+  applications,
+  validStatuses,
+} from "../models/application.model";
 
 // ── GET /applications ──────────────────────────────────────
-export function getApplications(req: Request, res: Response): void {
+export const getApplications = (req: Request, res: Response): void => {
   res.json(applications);
-}
+};
 
 // ── GET /applications/:id ──────────────────────────────────
-
-export function getApplicationById(req: Request, res: Response) {
+export const getApplicationById = (req: Request, res: Response): void => {
   const id = Number(req.params.id);
   const application = applications.find((app) => app.id === id);
 
   if (!application) {
-    res.status(400).json({ error: "Application not found" });
+    res.status(404).json({ error: "Application not found" });
+    return;
   }
+
   res.json(application);
-}
+};
 
 // ── POST /applications ─────────────────────────────────────
-export function createApplication(req: Request, res: Response) {
+export const createApplication = (req: Request, res: Response): void => {
   const { company, role, status, appliedDate, notes } = req.body;
 
-  // validate required fields
   const requiredFields = ["company", "role", "status", "appliedDate"];
   const missingFields: string[] = [];
 
@@ -44,21 +48,20 @@ export function createApplication(req: Request, res: Response) {
     return;
   }
 
-  // validate status
-
   if (!validStatuses.includes(status)) {
-    res.json(400).json({ error: "Invalid status", validStatuses });
+    res.status(400).json({ error: "Invalid status", validStatuses });
+    return;
   }
 
-  // check for duplicates
+  // .some() — cleaner than a for loop for duplicate check
   const alreadyApplied = applications.some(
     (app) => app.company === company && app.role === role,
   );
 
   if (alreadyApplied) {
-    res
-      .status(400)
-      .json({ error: "You have already applied to this role at this company" });
+    res.status(400).json({
+      error: "You have already applied to this role at this company",
+    });
     return;
   }
 
@@ -73,20 +76,21 @@ export function createApplication(req: Request, res: Response) {
 
   applications.push(newApplication);
   res.status(201).json(newApplication);
-}
+};
 
 // ── PUT /applications/:id ──────────────────────────────────
-
-export function updateApplication(req: Request, res: Response) {
+export const updateApplication = (req: Request, res: Response): void => {
   const id = Number(req.params.id);
   const index = applications.findIndex((app) => app.id === id);
 
   if (index === -1) {
-    res.json(400).json({ error: "Application not found" });
+    res.status(404).json({ error: "Application not found" });
+    return;
   }
 
   if (req.body.status && !validStatuses.includes(req.body.status)) {
-    res.status(400).json({ error: "invalid status", validStatuses });
+    res.status(400).json({ error: "Invalid status", validStatuses });
+    return;
   }
 
   const updatedApplication: Application = {
@@ -97,16 +101,16 @@ export function updateApplication(req: Request, res: Response) {
 
   applications[index] = updatedApplication;
   res.json(updatedApplication);
-}
+};
 
 // ── DELETE /applications/:id ───────────────────────────────
-
-export function deleteApplication(req: Request, res: Response) {
+export const deleteApplication = (req: Request, res: Response): void => {
   const id = Number(req.params.id);
   const index = applications.findIndex((app) => app.id === id);
 
   if (index === -1) {
-    res.status(400).json({ error: "Application not found" });
+    res.status(404).json({ error: "Application not found" });
+    return;
   }
 
   const { company, role } = applications[index];
@@ -116,4 +120,4 @@ export function deleteApplication(req: Request, res: Response) {
     message: `Application to ${company} for ${role} deleted successfully`,
     deletedId: id,
   });
-}
+};
