@@ -3,7 +3,7 @@
 // server.ts starts the server
 // This separation makes testing easier — tests import app, not server
 
-import app from "./app";
+import app from './app';
 
 const PORT = 3000;
 
