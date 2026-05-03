@@ -6,7 +6,7 @@ export interface Application {
   id: number;
   company: string;
   role: string;
-  status: "applied" | "interview" | "offer" | "rejected";
+  status: 'applied' | 'interview' | 'offer' | 'rejected';
   appliedDate: string;
   notes: string | null;
 }
@@ -15,25 +15,25 @@ export interface Application {
 export const applications: Application[] = [
   {
     id: 1,
-    company: "Google",
-    role: "Backend Engineer",
-    status: "applied",
-    appliedDate: "2024-01-15",
+    company: 'Google',
+    role: 'Backend Engineer',
+    status: 'applied',
+    appliedDate: '2024-01-15',
     notes: null,
   },
   {
     id: 2,
-    company: "Stripe",
-    role: "Node.js Developer",
-    status: "interview",
-    appliedDate: "2024-01-20",
-    notes: "Phone screen scheduled for Friday",
+    company: 'Stripe',
+    role: 'Node.js Developer',
+    status: 'interview',
+    appliedDate: '2024-01-20',
+    notes: 'Phone screen scheduled for Friday',
   },
 ];
 
-export const validStatuses: Application["status"][] = [
-  "applied",
-  "interview",
-  "offer",
-  "rejected",
+export const validStatuses: Application['status'][] = [
+  'applied',
+  'interview',
+  'offer',
+  'rejected',
 ];
