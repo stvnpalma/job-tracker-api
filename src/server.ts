@@ -1,11 +1,11 @@
-// Separation of concerns:
-// app.ts sets up Express
-// server.ts starts the server
-// This separation makes testing easier — tests import app, not server
+// 1. Load env variables immediately
+import dotenv from 'dotenv';
+dotenv.config();
 
+// 2. Import app (which will cascade-import Prisma safely!)
 import app from './app';
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
   console.log(`Job Tracker API running on http://localhost:${PORT}`);

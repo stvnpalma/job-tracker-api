@@ -1,142 +1,196 @@
+import { Status } from '@prisma/client';
 import { RequestHandler } from 'express';
-import {
-  Application,
-  applications,
-  validStatuses,
-} from '../models/application.model';
+import prisma from '../lib/prisma';
+import { validStatuses } from '../models/application.model';
 
 // ── GET /applications ──────────────────────────────────────
-export const getApplications: RequestHandler = (req, res) => {
-  const { status, company } = req.query;
-  let results = applications;
+export const getApplications: RequestHandler = async (req, res) => {
+  try {
+    const { status, company } = req.query;
 
-  if (status) {
-    results = results.filter((app) => app.status === status);
+    const applications = await prisma.application.findMany({
+      where: {
+        ...(status && { status: status as Status }),
+        ...(company && {
+          company: {
+            equals: company as string,
+            mode: 'insensitive',
+          },
+        }),
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return res.json({
+      total: applications.length,
+      data: applications,
+    });
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to fetch applications' });
   }
-
-  if (company) {
-    results = results.filter(
-      (app) => app.company.toLowerCase() === (company as string).toLowerCase(),
-    );
-  }
-
-  // No return needed here as it's the last line, but good for consistency
-  return res.json({
-    total: results.length,
-    data: results,
-  });
-};
-
-// ── GET /applications/:id ──────────────────────────────────
-export const getApplicationById: RequestHandler = (req, res) => {
-  const id = Number(req.params.id);
-  const application = applications.find((app) => app.id === id);
-
-  if (!application) {
-    return res.status(404).json({ error: 'Application not found' });
-  }
-
-  return res.json(application);
 };
 
 // ── GET /applications/stats ────────────────────────────────
-export const getStats: RequestHandler = (req, res) => {
-  const byStatus = applications.reduce(
-    (acc, app) => {
-      acc[app.status] = (acc[app.status] || 0) + 1;
-      return acc;
-    },
-    {} as Record<string, number>,
-  );
+export const getStats: RequestHandler = async (req, res) => {
+  try {
+    const applications = await prisma.application.findMany();
 
-  const active = applications.filter(
-    (app) => app.status === 'applied' || app.status === 'interview',
-  ).length;
+    const byStatus = applications.reduce(
+      (acc, app) => {
+        acc[app.status] = (acc[app.status] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
 
-  return res.json({
-    total: applications.length,
-    active,
-    byStatus,
-  });
+    const active = applications.filter(
+      (app) => app.status === 'applied' || app.status === 'interview',
+    ).length;
+
+    return res.json({
+      total: applications.length,
+      active,
+      byStatus,
+    });
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to fetch stats' });
+  }
+};
+
+// ── GET /applications/:id ──────────────────────────────────
+export const getApplicationById: RequestHandler = async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+
+    // Prevent querying the DB with NaN
+    if (isNaN(id)) {
+      return res
+        .status(400)
+        .json({ error: 'Invalid ID format. Must be a number.' });
+    }
+
+    const application = await prisma.application.findUnique({
+      where: { id },
+    });
+
+    if (!application) {
+      return res.status(404).json({ error: 'Application not found' });
+    }
+
+    return res.json(application);
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to fetch application' });
+  }
 };
 
 // ── POST /applications ─────────────────────────────────────
-export const createApplication: RequestHandler = (req, res) => {
-  const { company, role, status, appliedDate, notes } = req.body;
+export const createApplication: RequestHandler = async (req, res) => {
+  try {
+    const {
+      company,
+      role,
+      status,
+      appliedDate,
+      notes,
+    }: {
+      company: string;
+      role: string;
+      status: Status;
+      appliedDate: string;
+      notes?: string;
+    } = req.body;
 
-  const requiredFields = ['company', 'role', 'status', 'appliedDate'];
-  const missingFields: string[] = [];
+    const requiredFields = ['company', 'role', 'status', 'appliedDate'];
+    const missingFields: string[] = [];
 
-  for (const field of requiredFields) {
-    if (!req.body[field]) {
-      missingFields.push(field);
+    for (const field of requiredFields) {
+      if (!req.body[field]) missingFields.push(field);
     }
-  }
 
-  if (missingFields.length > 0) {
-    return res.status(400).json({
-      error: 'Missing required fields',
-      missing: missingFields,
+    if (missingFields.length > 0) {
+      return res.status(400).json({
+        error: 'Missing required fields',
+        missing: missingFields,
+      });
+    }
+
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ error: 'Invalid status', validStatuses });
+    }
+
+    const newApplication = await prisma.application.create({
+      data: {
+        company,
+        role,
+        status,
+        appliedDate,
+        notes: notes || null,
+      },
     });
+
+    return res.status(201).json(newApplication);
+  } catch (err: any) {
+    if (err.code === 'P2002') {
+      return res.status(400).json({
+        error: 'You have already applied to this role at this company',
+      });
+    }
+    return res.status(500).json({ error: 'Failed to create application' });
   }
-
-  if (!validStatuses.includes(status)) {
-    return res.status(400).json({
-      error: 'Invalid status',
-      validStatuses,
-    });
-  }
-
-  const newApplication: Application = {
-    id: applications.length + 1,
-    company,
-    role,
-    status,
-    appliedDate,
-    notes: notes || null,
-  };
-
-  applications.push(newApplication);
-  return res.status(201).json(newApplication);
 };
 
 // ── PUT /applications/:id ──────────────────────────────────
-export const updateApplication: RequestHandler = (req, res) => {
-  const id = Number(req.params.id);
-  const index = applications.findIndex((app) => app.id === id);
+export const updateApplication: RequestHandler = async (req, res) => {
+  try {
+    const id = Number(req.params.id);
 
-  if (index === -1) {
-    return res.status(404).json({ error: 'Application not found' });
+    if (isNaN(id)) {
+      return res
+        .status(400)
+        .json({ error: 'Invalid ID format. Must be a number.' });
+    }
+
+    if (req.body.status && !validStatuses.includes(req.body.status)) {
+      return res.status(400).json({ error: 'Invalid status', validStatuses });
+    }
+
+    const updatedApplication = await prisma.application.update({
+      where: { id },
+      data: req.body,
+    });
+
+    return res.json(updatedApplication);
+  } catch (err: any) {
+    if (err.code === 'P2025') {
+      return res.status(404).json({ error: 'Application not found' });
+    }
+    return res.status(500).json({ error: 'Failed to update application' });
   }
-
-  if (req.body.status && !validStatuses.includes(req.body.status)) {
-    return res.status(400).json({ error: 'Invalid status', validStatuses });
-  }
-
-  const updatedApplication: Application = {
-    ...applications[index],
-    ...req.body,
-    id,
-  };
-
-  applications[index] = updatedApplication;
-  return res.json(updatedApplication);
 };
 
 // ── DELETE /applications/:id ───────────────────────────────
-export const deleteApplication: RequestHandler = (req, res) => {
-  const id = Number(req.params.id);
-  const index = applications.findIndex((app) => app.id === id);
+export const deleteApplication: RequestHandler = async (req, res) => {
+  try {
+    const id = Number(req.params.id);
 
-  if (index === -1) {
-    return res.status(404).json({ error: 'Application not found' });
+    if (isNaN(id)) {
+      return res
+        .status(400)
+        .json({ error: 'Invalid ID format. Must be a number.' });
+    }
+
+    const deleted = await prisma.application.delete({
+      where: { id },
+    });
+
+    return res.json({
+      message: `Application to ${deleted.company} for ${deleted.role} deleted successfully`,
+      deletedId: id,
+    });
+  } catch (err: any) {
+    if (err.code === 'P2025') {
+      return res.status(404).json({ error: 'Application not found' });
+    }
+    return res.status(500).json({ error: 'Failed to delete application' });
   }
-
-  const { company, role } = applications[index];
-  applications.splice(index, 1);
-
-  return res.json({
-    message: `Application to ${company} for ${role} deleted successfully`,
-    deletedId: id,
-  });
 };
