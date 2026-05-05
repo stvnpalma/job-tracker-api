@@ -1,0 +1,27 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Application {
+  id          Int      @id @default(autoincrement())
+  company     String
+  role        String
+  status      Status   @default(applied)
+  appliedDate String
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([company, role])
+}
+
+enum Status {
+  applied
+  interview
+  offer
+  rejected
+}
