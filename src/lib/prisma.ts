@@ -1,5 +1,6 @@
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '@prisma/client';
+import 'dotenv/config';
 import pg from 'pg';
 
 // 1. Create a pool using your DATABASE_URL environment variable
