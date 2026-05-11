@@ -11,16 +11,25 @@
     "dev": "ts-node src/server.ts",
     "build": "tsc",
     "test": "jest --forceExit --runInBand",
-    "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.js\""
+    "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\""
   },
   "jest": {
     "projects": [
       {
         "displayName": "unit",
+        "preset": "ts-jest",
         "testMatch": [
-          "<rootDir>/tests/unit/**/*.test.js"
+          "<rootDir>/tests/unit/**/*.test.ts"
         ],
-        "testEnvironment": "node"
+        "testEnvironment": "node",
+        "transform": {
+          "^.+\\.ts$": [
+            "ts-jest",
+            {
+              "tsconfig": "./tsconfig.test.json"
+            }
+          ]
+        }
       },
       {
         "displayName": "integration",
