@@ -1,3 +1,4 @@
+/// <reference types="jest" />
 describe('DELETE /applications/:id', () => {
   it('removes the correct application by index', () => {
     const applications = [

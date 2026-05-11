@@ -1,4 +1,4 @@
-//@ts-ignore
+/// <reference types="jest" />
 const applications = [
   {
     id: 1,
@@ -118,10 +118,13 @@ describe('GET /applications/stats', () => {
   });
 
   test('groups applications by status correctly', () => {
-    const byStatus = applications.reduce((acc, app) => {
-      acc[app.status] = (acc[app.status] || 0) + 1;
-      return acc;
-    }, {});
+    const byStatus = applications.reduce(
+      (acc, app) => {
+        acc[app.status] = (acc[app.status] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
 
     expect(byStatus.applied).toBe(1);
     expect(byStatus.interview).toBe(1);

@@ -1,8 +1,7 @@
-//@ts-nocheck
-
+/// <reference types="jest" />
 describe('POST /applications', () => {
   test('detects missing required fields', () => {
-    const body = { company: 'Netflix' };
+    const body: Record<string, string> = { company: 'Netflix' };
     const requiredFields = ['company', 'role', 'status', 'appliedDate'];
     const missingFields = [];
 
