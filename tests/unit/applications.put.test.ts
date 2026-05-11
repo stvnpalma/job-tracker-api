@@ -1,3 +1,4 @@
+/// <reference types="jest" />
 describe('PUT /applications/:id', () => {
   test('finds the correct index by id', () => {
     const applications = [
