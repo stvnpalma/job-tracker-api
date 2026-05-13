@@ -3,13 +3,18 @@ import { PrismaClient } from '@prisma/client';
 import 'dotenv/config';
 import pg from 'pg';
 
-// 1. Create a pool using your DATABASE_URL environment variable
-const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+const isProduction = process.env.NODE_ENV === 'production';
 
-// 2. Wrap it with the Prisma PostgreSQL adapter
+const pool = new pg.Pool({
+  connectionString: process.env.DATABASE_URL,
+  ...(isProduction && {
+    ssl: {
+      rejectUnauthorized: false,
+    },
+  }),
+});
+
 const adapter = new PrismaPg(pool);
-
-// 3. Initialize Prisma Client with the adapter
 const prisma = new PrismaClient({ adapter });
 
 export default prisma;
