@@ -7,7 +7,17 @@ Tested with Jest and Supertest. CI/CD with GitHub Actions.
 
 ## Live API
 
-Base URL: `http://18.206.220.166:3000`
+Previously deployed on AWS EC2 (t4g.micro) with RDS PostgreSQL (db.t4g.micro).
+Resources torn down after validation. See deployment instructions below to redeploy.
+
+## Deployment
+
+1. Launch EC2 instance with Node.js 22
+2. Create RDS PostgreSQL instance
+3. Clone repo, create `.env` with DATABASE_URL
+4. Run `prisma generate && prisma migrate deploy`
+5. Build with `npm run build`
+6. Start with `pm2 start dist/server.js`
 
 ## Endpoints
 
@@ -40,4 +50,4 @@ Base URL: `http://18.206.220.166:3000`
 
 ## Status
 
-✅ Live on AWS
+## Live on AWS
