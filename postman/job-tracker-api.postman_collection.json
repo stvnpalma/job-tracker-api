@@ -1,0 +1,225 @@
+{
+  "info": {
+    "name": "Job Tracker API",
+    "description": "Complete test suite for the Job Tracker REST API. Import this collection to test all endpoints.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Applications",
+      "item": [
+        {
+          "name": "GET all applications",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/applications",
+            "description": "Returns all applications. Supports ?status and ?company query filters."
+          }
+        },
+        {
+          "name": "GET all — filter by status",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/applications?status=applied",
+              "query": [{ "key": "status", "value": "applied" }]
+            },
+            "description": "Filter applications by status. Valid values: applied, interview, offer, rejected."
+          }
+        },
+        {
+          "name": "GET all — filter by company",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/applications?company=google",
+              "query": [{ "key": "company", "value": "google" }]
+            },
+            "description": "Filter by company name. Case insensitive."
+          }
+        },
+        {
+          "name": "GET stats",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/applications/stats",
+            "description": "Returns total, active count, and breakdown by status."
+          }
+        },
+        {
+          "name": "GET application by id",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/applications/1",
+            "description": "Returns a single application by id."
+          }
+        },
+        {
+          "name": "GET application by id — not found",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/applications/999999",
+            "description": "Returns 404 when application does not exist."
+          }
+        },
+        {
+          "name": "GET application by id — invalid format",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/applications/abc",
+            "description": "Returns 400 when id is not a number."
+          }
+        },
+        {
+          "name": "POST create application",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/applications",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"company\": \"Google\",\n  \"role\": \"Backend Engineer\",\n  \"status\": \"applied\",\n  \"appliedDate\": \"2024-01-15\",\n  \"notes\": \"Referral from a friend\"\n}"
+            },
+            "description": "Creates a new application. Returns 201 with the created record."
+          }
+        },
+        {
+          "name": "POST create — missing fields",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/applications",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"company\": \"Netflix\"\n}"
+            },
+            "description": "Returns 400 with list of missing required fields."
+          }
+        },
+        {
+          "name": "POST create — invalid status",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/applications",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"company\": \"Apple\",\n  \"role\": \"iOS Engineer\",\n  \"status\": \"pending\",\n  \"appliedDate\": \"2024-01-15\"\n}"
+            },
+            "description": "Returns 400 when status is not one of: applied, interview, offer, rejected."
+          }
+        },
+        {
+          "name": "POST create — duplicate",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/applications",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"company\": \"Google\",\n  \"role\": \"Backend Engineer\",\n  \"status\": \"applied\",\n  \"appliedDate\": \"2024-01-15\"\n}"
+            },
+            "description": "Returns 409 when company + role combination already exists."
+          }
+        },
+        {
+          "name": "PUT update application",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/applications/1",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"interview\",\n  \"notes\": \"Phone screen scheduled for Friday\"\n}"
+            },
+            "description": "Updates an existing application. Partial updates supported."
+          }
+        },
+        {
+          "name": "PUT update — invalid status",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/applications/1",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"pending\"\n}"
+            },
+            "description": "Returns 400 when status value is invalid."
+          }
+        },
+        {
+          "name": "PUT update — not found",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/applications/999999",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"interview\"\n}"
+            },
+            "description": "Returns 404 when application does not exist."
+          }
+        },
+        {
+          "name": "DELETE application",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/applications/1",
+            "description": "Deletes an application. Returns confirmation message and deleted id."
+          }
+        },
+        {
+          "name": "DELETE — not found",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/applications/999999",
+            "description": "Returns 404 when application does not exist."
+          }
+        }
+      ]
+    }
+  ]
+}
